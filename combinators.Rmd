@@ -1,0 +1,120 @@
+---
+title: "Lambda Calculus"
+author: "Jon Harmon"
+date: "6/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Idiot
+
+Take input and return it.
+
+```{r Idiot}
+I <- function(x) x
+I(5) == 5
+```
+
+## Mockingbird
+
+Take input and return that input called on itself.
+
+```{r Mockingbird}
+M <- function(f) f(f)
+M(I)(5) == I(5)
+```
+
+## Kestrel
+
+Take input and return a function that takes new input and returns the original input.
+
+```{r Kestrel}
+K <- function(c) function(i) c
+identical(K(I)(2), I)
+K(I)(2)(3) == 3
+```
+
+## Kite
+
+Take input and return a function that ignores that input and returns its own input.
+
+```{r Kite}
+KI <- function(x) K(I)(x)
+KI(2)(3) == 3
+```
+
+## Aside: Booleans
+
+```{r redefine-bools}
+T <- K
+F <- KI
+# Mess with the srcref so returning F shows FALSE and T shows TRUE
+attr(T, "srcref") <- TRUE
+attr(F, "srcref") <- FALSE
+T
+F
+```
+
+```{r not}
+NOT <- function(p) p(F)(T)
+NOT(T)
+NOT(F)
+```
+
+```{r AND}
+AND <- function(p) function(q) p(q)(p)
+AND(F)(F)
+AND(T)(T)
+AND(F)(T)
+AND(T)(F)
+```
+
+```{r OR}
+OR <- function(p) function(q) p(p)(q)
+OR(F)(F)
+OR(F)(T)
+OR(T)(F)
+OR(T)(T)
+```
+
+OR is a special case of the mockingbird!
+```{r mockingOR}
+M(F)(F)
+M(F)(T)
+M(T)(F)
+M(T)(T)
+```
+
+```{r EQUAL}
+EQUAL <- function(p) function(q) p(q)(NOT(q))
+EQUAL(T)(T)
+EQUAL(T)(F)
+EQUAL(F)(T)
+EQUAL(F)(F)
+```
+
+## Cardinal
+
+Take a 2-argument function and return that function but with its arguments reversed.
+All of the sudden I need waaaay more complicated R code.
+OH! Except the cardinal *is* NOT, so I can get closer.
+
+```{r Cardinal}
+C <- function(f) {
+  function(a) function(b) f(b)(a)
+}
+```
+
+This works for any function written in the same formal way, so, for example:
+
+```{r testing}
+testing <- function(a) function(b) paste(a, b)
+testing(1)(2)
+testing(2)(1)
+C(testing)(1)(2) == testing(2)(1)
+```
+
+I'd like to test these equalities using `EQUAL`, but I need everything to be functions (and accept functions) for that to work, so... not yet.
